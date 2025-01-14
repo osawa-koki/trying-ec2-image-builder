@@ -32,6 +32,7 @@ export class IndexStack extends cdk.Stack {
       assumedBy: new iam.ServicePrincipal('ec2.amazonaws.com'),
       managedPolicies: [
         iam.ManagedPolicy.fromAwsManagedPolicyName('EC2InstanceProfileForImageBuilder'),
+        iam.ManagedPolicy.fromAwsManagedPolicyName('AmazonSSMManagedInstanceCore'),
       ],
     });
 
@@ -71,6 +72,22 @@ export class IndexStack extends cdk.Stack {
       parentImage: 'arn:aws:imagebuilder:ap-northeast-1:aws:image/amazon-linux-2023-x86/2023.10.10',
     });
 
+    new ec2.InterfaceVpcEndpoint(this, 'SSMEndpoint', {
+      vpc,
+      service: ec2.InterfaceVpcEndpointAwsService.SSM,
+      securityGroups: [securityGroup],
+    });
+    new ec2.InterfaceVpcEndpoint(this, 'SSMMessagesEndpoint', {
+      vpc,
+      service: ec2.InterfaceVpcEndpointAwsService.SSM_MESSAGES,
+      securityGroups: [securityGroup],
+    });
+    new ec2.InterfaceVpcEndpoint(this, 'EC2MessagesEndpoint', {
+      vpc,
+      service: ec2.InterfaceVpcEndpointAwsService.EC2_MESSAGES,
+      securityGroups: [securityGroup],
+    });
+
     const infrastructureConfiguration = new imagebuilder.CfnInfrastructureConfiguration(
       this,
       'InfraConfig',
@@ -80,6 +97,7 @@ export class IndexStack extends cdk.Stack {
         instanceProfileName: instanceProfile.instanceProfileName,
         subnetId: vpc.publicSubnets[0].subnetId,
         securityGroupIds: [securityGroup.securityGroupId],
+        terminateInstanceOnFailure: true,
       }
     );
 
