@@ -75,6 +75,7 @@ sudo vim /etc/nginx/nginx.conf
 sudo systemctl restart nginx
 
 # ブラウザで`http://${EC2_PUBLIC_IP}:8000`にアクセスしてください。
+# or `curl ${EC2_PUBLIC_IP}:8000`
 # デフォルトのページが表示されれば成功です。
 ```
 
