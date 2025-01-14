@@ -83,13 +83,14 @@ export class IndexStack extends cdk.Stack {
       }
     );
 
-    new imagebuilder.CfnImagePipeline(this, 'WebServerPipeline', {
+    const imagePipeline = new imagebuilder.CfnImagePipeline(this, 'WebServerPipeline', {
       name: 'WebServerPipeline',
       imageRecipeArn: recipe.attrArn,
       infrastructureConfigurationArn: infrastructureConfiguration.attrArn,
-      schedule: {
-        scheduleExpression: 'cron(0 0 1 * ? *)',
-      },
+    });
+
+    new cdk.CfnOutput(this, 'ImagePipelineArn', {
+      value: imagePipeline.attrArn,
     });
   }
 }
