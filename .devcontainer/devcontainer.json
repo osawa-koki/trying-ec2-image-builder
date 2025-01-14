@@ -38,7 +38,8 @@
   "remoteUser": "root",
 
   "mounts": [
-    "source=${env:HOME}/.aws,target=/root/.aws,type=bind"
+    "source=${env:HOME}/.aws,target=/root/.aws,type=bind",
+    "source=${env:HOME}/.ssh,target=/root/.ssh,type=bind"
   ],
   "containerEnv": {
     "AWS_PROFILE": "default"
