@@ -18,7 +18,7 @@ cdk deploy --require-approval never --all
 
 これで、EC2 Image Builderのイメージパイプラインが作成されます。  
 
-続いて、イメージパイプラインを実行と、作成したAMIからEC2インスタンスを作成します。  
+続いて、イメージパイプラインの実行と、作成したAMIからEC2インスタンスの作成を行います。  
 
 ```shell
 # 環境変数の読み込み
