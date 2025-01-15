@@ -61,12 +61,36 @@ export class IndexStack extends cdk.Stack {
       `,
     });
 
+    const apacheComponent = new imagebuilder.CfnComponent(this, 'ApacheComponent', {
+      name: 'ApacheInstallComponent',
+      platform: 'Linux',
+      version: '1.0.0',
+      data: `
+        name: ApacheInstallComponent
+        description: Installs Apache web server
+        schemaVersion: 1.0
+        phases:
+          - name: build
+            steps:
+              - name: InstallApache
+                action: ExecuteBash
+                inputs:
+                  commands:
+                    - yum update -y
+                    - yum install -y httpd
+                    - systemctl enable httpd
+      `,
+    });
+
     const recipe = new imagebuilder.CfnImageRecipe(this, 'WebServerRecipe', {
       name: 'WebServerRecipe',
       version: '1.0.0',
       components: [
         {
           componentArn: nginxComponent.attrArn,
+        },
+        {
+          componentArn: apacheComponent.attrArn,
         },
       ],
       parentImage: 'arn:aws:imagebuilder:ap-northeast-1:aws:image/amazon-linux-2023-x86/2023.10.10',
