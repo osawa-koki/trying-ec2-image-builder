@@ -31,8 +31,9 @@ IMAGE_PIPELINE_ARN=$(aws cloudformation describe-stacks --stack-name ${BASE_STAC
 EXECUTION_RESULT=$(aws imagebuilder start-image-pipeline-execution --image-pipeline-arn $IMAGE_PIPELINE_ARN)
 
 # イメージパイプラインの実行状況を取得
-# `imageSummaryList.state.status`が`AVAILABLE`になるまで待つ。
+# `imageSummaryList[].state.status`が`AVAILABLE`になるまで待つ。
 aws imagebuilder list-image-pipeline-images --image-pipeline-arn $IMAGE_PIPELINE_ARN
+aws imagebuilder list-image-pipeline-images --image-pipeline-arn $IMAGE_PIPELINE_ARN | jq -r '.imageSummaryList[] | .state.status'
 
 # AMIのIDを取得
 AMI_RESULT=$(aws imagebuilder list-image-pipeline-images --image-pipeline-arn $IMAGE_PIPELINE_ARN --query 'imageSummaryList[?state.status==`AVAILABLE`].{
@@ -53,6 +54,11 @@ aws cloudformation create-stack --stack-name ${BASE_STACK_NAME}-ec2-stack \
     ParameterKey=AmiId,ParameterValue=${AMI_ID} \
     ParameterKey=PublicKeyMaterial,ParameterValue="$(cat ~/.ssh/id_rsa.pub)" \
     ParameterKey=InstanceType,ParameterValue=t3.micro
+
+# スタックの作成状況を確認
+# `Stacks[0].StackStatus`が`CREATE_COMPLETE`になるまで待つ。
+aws cloudformation describe-stacks --stack-name ${BASE_STACK_NAME}-ec2-stack
+aws cloudformation describe-stacks --stack-name ${BASE_STACK_NAME}-ec2-stack | jq -r '.Stacks[0].StackStatus'
 
 # EC2インスタンスに接続
 # 秘密鍵は`~/.ssh/id_rsa`にあると仮定しています。
@@ -76,7 +82,43 @@ sudo systemctl restart nginx
 
 # ブラウザで`http://${EC2_PUBLIC_IP}:8000`にアクセスしてください。
 # or `curl ${EC2_PUBLIC_IP}:8000`
-# デフォルトのページが表示されれば成功です。
+# デフォルトのページ(Nginxのデフォルトページ)が表示されれば成功です。
+
+# ----- ----- -----
+
+sudo vim /etc/httpd/conf/httpd.conf
+
+##### Before
+# # Listen: Allows you to bind Apache to specific IP addresses and/or
+# # ports, instead of the default. See also the <VirtualHost>
+# # directive.
+# #
+# # Change this to Listen on a specific IP address, but note that if
+# # httpd.service is enabled to run at boot time, the address may not be
+# # available when the service starts.  See the httpd.service(8) man
+# # page for more information.
+# #
+# #Listen 12.34.56.78:80
+# Listen 80
+##### After
+# # Listen: Allows you to bind Apache to specific IP addresses and/or
+# # ports, instead of the default. See also the <VirtualHost>
+# # directive.
+# #
+# # Change this to Listen on a specific IP address, but note that if
+# # httpd.service is enabled to run at boot time, the address may not be
+# # available when the service starts.  See the httpd.service(8) man
+# # page for more information.
+# #
+# #Listen 12.34.56.78:80
+# Listen 8080
+# に変更
+
+sudo systemctl restart httpd
+
+# ブラウザで`http://${EC2_PUBLIC_IP}:8080`にアクセスしてください。
+# or `curl ${EC2_PUBLIC_IP}:8080`
+# デフォルトのページ(Apacheのデフォルトページ)が表示されれば成功です。
 ```
 
 削除する場合は、以下のコマンドを実行します。  
